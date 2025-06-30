@@ -23,10 +23,16 @@
         })
       }).then(response => {
         console.log("Response status:", response.status);
-        document.body.innerHTML = `<h2>Location sent for ${build}!</h2>`;
+        document.body.innerHTML = `
+          <h2>Location sent for ${build}!</h2>
+          <button onclick="window.close()">Close this tab</button>
+        `;
       }).catch(err => {
         console.error("Fetch error:", err);
-        document.body.innerHTML = "<h2>Failed to send location.</h2>";
+        document.body.innerHTML = `
+          <h2>Failed to send location...</h2>
+          <button onclick="window.close()">Close this tab</button>
+        `;
       });
     },
     error => {
