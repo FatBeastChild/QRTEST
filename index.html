@@ -13,11 +13,20 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const build = params.get("build") || "Unknown Build";
-
+  
+    // Show initial "Sending..." UI
+    document.body.innerHTML = `
+      <div class="overlay">
+        <h2>Sending location for ${build}...</h2>
+        <p>Please wait while we send your location.</p>
+      </div>
+    `;
+  
     console.log("Starting GPS request...");
     navigator.geolocation.getCurrentPosition(
       position => {
         console.log("Got position:", position);
+  
         fetch("https://prod-16.australiasoutheast.logic.azure.com:443/workflows/c52a1dc477c94cc99cfdcac343120a26/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yQuVbGx7fxGOnM-LZoQlhvsfcSM_ZdH74H1ZiZEryx0", {
           method: "POST",
           headers: {
@@ -30,18 +39,27 @@
           })
         }).then(response => {
           console.log("Response status:", response.status);
-          document.body.innerHTML = `
-            <div class="overlay">
-              <h2>Location sent for ${build}!</h2>
-              <p>You can now close this tab.</p>
-            </div>
-          `;
+          if (response.ok) {
+            document.body.innerHTML = `
+              <div class="overlay">
+                <h2>✅ Location sent for ${build}!</h2>
+                <p>You can now close this tab.</p>
+              </div>
+            `;
+          } else {
+            document.body.innerHTML = `
+              <div class="overlay">
+                <h2>⚠️ Failed to send location (server error).</h2>
+                <p>Please try again or contact support.</p>
+              </div>
+            `;
+          }
         }).catch(err => {
           console.error("Fetch error:", err);
           document.body.innerHTML = `
             <div class="overlay">
-              <h2>Failed to send location...</h2>
-              <p>You can now close this tab.</p>
+              <h2>❌ Failed to send location (network error).</h2>
+              <p>Please check your connection.</p>
             </div>
           `;
         });
@@ -50,8 +68,8 @@
         console.error("GPS error:", error);
         document.body.innerHTML = `
           <div class="overlay">
-            <h2>GPS Permission denied or unavailable.</h2>
-            <p>You can now close this tab.</p>
+            <h2>📍 GPS access denied or unavailable.</h2>
+            <p>Please allow location access and try again.</p>
           </div>
         `;
       }
