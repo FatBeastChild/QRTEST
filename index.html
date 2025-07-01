@@ -1,48 +1,61 @@
 <!DOCTYPE html>
-<html>
-<head><title>Send GPS Location</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Send GPS Location</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
-  <h2>Sending your location...</h2>
-  <script>
-  const params = new URLSearchParams(window.location.search);
-  const build = params.get("build") || "Unknown Build";
+  <div class="overlay">
+    <h2>Sending your location...</h2>
+  </div>
 
-  console.log("Starting GPS request...");
-  navigator.geolocation.getCurrentPosition(
-    position => {
-      console.log("Got position:", position);
-      fetch("https://prod-16.australiasoutheast.logic.azure.com:443/workflows/c52a1dc477c94cc99cfdcac343120a26/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yQuVbGx7fxGOnM-LZoQlhvsfcSM_ZdH74H1ZiZEryx0", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          build: build
-        })
-      }).then(response => {
-        console.log("Response status:", response.status);
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const build = params.get("build") || "Unknown Build";
+
+    console.log("Starting GPS request...");
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        console.log("Got position:", position);
+        fetch("https://prod-16.australiasoutheast.logic.azure.com:443/workflows/c52a1dc477c94cc99cfdcac343120a26/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yQuVbGx7fxGOnM-LZoQlhvsfcSM_ZdH74H1ZiZEryx", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            build: build
+          })
+        }).then(response => {
+          console.log("Response status:", response.status);
+          document.body.innerHTML = `
+            <div class="overlay">
+              <h2>Location sent for ${build}!</h2>
+              <p>You can now close this tab.</p>
+            </div>
+          `;
+        }).catch(err => {
+          console.error("Fetch error:", err);
+          document.body.innerHTML = `
+            <div class="overlay">
+              <h2>Failed to send location...</h2>
+              <p>You can now close this tab.</p>
+            </div>
+          `;
+        });
+      },
+      error => {
+        console.error("GPS error:", error);
         document.body.innerHTML = `
-          <h2>Location sent for ${build}!</h2>
-          <p>You can now close this tab.</p>
+          <div class="overlay">
+            <h2>GPS Permission denied or unavailable.</h2>
+            <p>You can now close this tab.</p>
+          </div>
         `;
-      }).catch(err => {
-        console.error("Fetch error:", err);
-        document.body.innerHTML = `
-          <h2>Failed to send location...</h2>
-          <p>You can now close this tab.</p>
-        `;
-      });
-    },
-    error => {
-      console.error("GPS error:", error);
-      document.body.innerHTML = `
-      <h2>GPS Permission denied or unavailable.</h2>
-      <p>You can now close this tab.</p>
-      `;
-    }
-  );
-</script>
+      }
+    );
+  </script>
 </body>
 </html>
